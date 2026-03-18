@@ -1,8 +1,9 @@
 Simple Spellchecker
 ===================
 
-> A simple and fast spellchecker with spelling suggestions and Electron's integration
+> An ESM fork of [simple-spellchecker](https://github.com/jfmdev/simple-spellchecker) — a simple and fast spellchecker with spelling suggestions
 
+This is a modernised fork that migrates the original library to ESM, TypeScript, and async/await (replacing callbacks). It uses [Bun](https://bun.sh) as the bundler and test runner.
 
 Features
 --------
@@ -16,22 +17,20 @@ It also has a CLI tool that allows to check words from the command line.
 Usage
 -----
 
-In order to use the module, you must first install it using NPM.
+Install the module:
 
-    npm install simple-spellchecker
+    bun add simple-spellchecker
 
-And then require the module, get a `Dictionary` object and invoke their methods.
+Then import the module, get a `Dictionary` object and invoke its methods:
 
-```javascript
-var SpellChecker = require('simple-spellchecker');
-SpellChecker.getDictionary("fr-FR", function(err, dictionary) {
-    if(!err) {
-        var misspelled = ! dictionary.spellCheck('maisonn');
-        if(misspelled) {
-            var suggestions = dictionary.getSuggestions('maisonn');
-        }
-    }
-});    
+```typescript
+import SpellChecker from 'simple-spellchecker';
+
+const dictionary = await SpellChecker.getDictionary("fr-FR");
+const misspelled = dictionary.isMisspelled('maisonn');
+if (misspelled) {
+    const suggestions = dictionary.getSuggestions('maisonn');
+}
 ```
 
 Methods
@@ -39,24 +38,22 @@ Methods
 
 ### Module
 
-The module has three public methods: `getDictionary()`,  `getDictionarySync()` and `normalizeDictionary()`.
+The module has three public methods: `getDictionary()`, `getDictionarySync()` and `normalizeDictionary()`.
 
-#### getDictionary(fileName [, folderPath], callback)
+#### getDictionary(fileName [, folderPath]): Promise\<Dictionary\>
 
-This method allows to get a `Dictionary` instance from a file. 
+This method allows to get a `Dictionary` instance from a file. Returns a promise.
 
 Parameters:
  * `fileName`: The name of the dictionary's file. The method is going to first search a file with `.dic` extension, if not found, then is going to search a `.zip` and is going to unzip it.
  * `folderPath`: The folder in which the dictionary's file is located. This parameter is optional, by default it assumes that the file is in the `dict` folder.
- * `callback`: A function which is going to be invoked for return the `Dictionary` object.
 
 Example: 
 
-```javascript
-var SpellChecker = require('simple-spellchecker');
-SpellChecker.getDictionary("fr-FR", function(err, result) {
-    var dictionary = result;
-});    
+```typescript
+import SpellChecker from 'simple-spellchecker';
+
+const dictionary = await SpellChecker.getDictionary("fr-FR");
 ```
 
 #### getDictionarySync(fileName [, folderPath])
@@ -72,27 +69,27 @@ Returns:
 
 Example: 
 
-```javascript
-var SpellChecker = require('simple-spellchecker');
-var dictionary = SpellChecker.getDictionarySync("fr-FR");    
+```typescript
+import SpellChecker from 'simple-spellchecker';
+
+const dictionary = SpellChecker.getDictionarySync("fr-FR");
 ```
 
-#### normalizeDictionary(inputPath [, outputPath], callback)
+#### normalizeDictionary(inputPath [, outputPath]): Promise\<boolean\>
 
-This methods reads a UTF-8 dictionary file, removes the BOM and `\r` characters and sorts the list of words.
+This methods reads a UTF-8 dictionary file, removes the BOM and `\r` characters and sorts the list of words. Returns a promise.
 
 Parameters:
  * `inputPath`: The path of the dictionary file.
- * `outputPath`: The path for the normalized dictionary file. This parameter is optional, by deafult the original file is overwritten.
- * `callback`: A function which is going to be invoked when the process has finished.
+ * `outputPath`: The path for the normalized dictionary file. This parameter is optional, by default the original file is overwritten.
 
 Example:
 
-```javascript
-var SpellChecker = require('simple-spellchecker');
-SpellChecker.normalizeDictionary(inputFile, outputFile, function(err, success) {
-    if(success) console.log("The file was normalized");
-}); 
+```typescript
+import SpellChecker from 'simple-spellchecker';
+
+await SpellChecker.normalizeDictionary(inputFile, outputFile);
+console.log("The file was normalized");
 ```   
 
 ### Dictionary
@@ -198,68 +195,34 @@ In order to test a dictionary file, you must execute the script indicating the f
 
 For example, the following sentence will search in the `dict` folder a dictionary which is either in the file `en-GB.dic` or `en-GB.zip`, and is going to verify if the word `house` is misspelled or not and is going to search some spelling suggestions.
 
-    node cli.js check "./dict" en-GB house
+    bun cli.ts check "./dict" en-GB house
     
 
 ### Normalize
 
 In order to normalize a dictionary file, you must execute the script indicating the file's path:
 
-    node cli.js normalize "./dict/en-GB.dic"
+    bun cli.ts normalize "./dict/en-GB.dic"
 
 If you don't want to override the original file, you can specify the path for an output file:
 
-    node cli.js normalize "./dict/en-GB.dic" "C:/output/en-GB.dic"
+    bun cli.ts normalize "./dict/en-GB.dic" "./output/en-GB.dic"
 
-Electron's integration
-----------------------
+Building
+--------
 
-There are several ways in which you can integrate this module with Electron. But if you want a starting point, the following example shows how to enable the English dictionary:
+This project uses [Bun](https://bun.sh) as the bundler. To produce a bundled build with sourcemaps:
 
-**1)** Install the module as a dependency of your project (`npm install simple-spellchecker --save`).
+    bun run build
 
-**2)** In the main process, require the module, load the dictionary, and define a function to access to his methods:
-
-```javascript
-// Initialization.
-var SpellChecker = require('simple-spellchecker');
-var myDictionary = null;
-
-// Load dictionary.
-SpellChecker.getDictionary("en-US", "./node_modules/simple-spellchecker/dict", function(err, result) {
-    if(!err) {
-        myDictionary = result;
-    }
-});
-
-// Define function for consult the dictionary.
-ipcMain.on('checkspell', function(event, word) {
-    var res = null;
-    if(myDictionary != null && word != null) {
-        res = myDictionary.spellCheck(word);
-    }
-    event.returnValue = res;
-});
-```
-
-**3)** In the renderer process, define a spell checker provider that uses the previously loaded dictionary.
-
-```javascript
-// Get web frame.
-var webFrame = require('electron').webFrame;
-
-webFrame.setSpellCheckProvider("en-US", false, {
-    spellCheck: function(text) {      
-        var res = ipcRenderer.sendSync('checkspell', text);
-        return res != null? res : true;
-    }
-});
-```
+This outputs `dist/index.js` and `dist/index.js.map`.
 
 Unit testing
 ------------
 
-The module is partially tested by the file `test.js` (using _Mocha_ and _Chai_). In order to run the tests, just execute the command `npm test`.
+Tests use [Bun's built-in test runner](https://bun.sh/docs/cli/test). To run them:
+
+    bun test
 
 License
 -------
