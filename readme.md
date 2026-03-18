@@ -75,6 +75,22 @@ import SpellChecker from 'simple-spellchecker';
 const dictionary = SpellChecker.getDictionarySync("fr-FR");
 ```
 
+#### getDictionaryFromZip(zipPath, destDir): Promise\<Dictionary\>
+
+This method allows to get a `Dictionary` instance by providing the full path to a `.zip` file. The dictionary filename is inferred from the zip filename (e.g. `en-US.zip` → `en-US.dic`).
+
+Parameters:
+ * `zipPath`: The full path to the `.zip` file containing the dictionary.
+ * `destDir`: The directory where the zip contents will be extracted. If the `.dic` file already exists in this directory, it is read directly without re-extracting.
+
+Example: 
+
+```typescript
+import SpellChecker from 'simple-spellchecker';
+
+const dictionary = await SpellChecker.getDictionaryFromZip("/path/to/en-US.zip", "/tmp/dicts");
+```
+
 #### normalizeDictionary(inputPath [, outputPath]): Promise\<boolean\>
 
 This methods reads a UTF-8 dictionary file, removes the BOM and `\r` characters and sorts the list of words. Returns a promise.

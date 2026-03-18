@@ -8,6 +8,7 @@ import { describe, it, expect, beforeEach, beforeAll } from 'bun:test';
 import SpellChecker from './index.ts';
 import fs from 'fs';
 import path from 'path';
+import os from 'os';
 
 describe("Module methods", () => {
     beforeEach(() => {
@@ -25,6 +26,29 @@ describe("Module methods", () => {
     it("getDictionarySync()", () => {
         const syncDict = SpellChecker.getDictionarySync("en-US");
         expect(syncDict).not.toBeNull();
+    });
+
+    it("getDictionaryFromZip()", async () => {
+        const zipPath = path.join(import.meta.dirname, "dict", "en-US.zip");
+        const destDir = fs.mkdtempSync(path.join(os.tmpdir(), "spellcheck-"));
+        try {
+            const dict = await SpellChecker.getDictionaryFromZip(zipPath, destDir);
+            expect(dict).not.toBeNull();
+            expect(dict.spellCheck("house")).toBe(true);
+        } finally {
+            fs.rmSync(destDir, { recursive: true, force: true });
+        }
+    });
+
+    it("getDictionaryFromZip() throws for missing zip", async () => {
+        const destDir = fs.mkdtempSync(path.join(os.tmpdir(), "spellcheck-"));
+        try {
+            await expect(
+                SpellChecker.getDictionaryFromZip("/nonexistent/path.zip", destDir)
+            ).rejects.toThrow("zip file could not be found");
+        } finally {
+            fs.rmSync(destDir, { recursive: true, force: true });
+        }
     });
 });
 

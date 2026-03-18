@@ -9,7 +9,7 @@ import { readFile, access, writeFile } from 'fs/promises';
 import path from 'path';
 import tmp from 'tmp';
 import Zip from 'adm-zip';
-import Dictionary from './dictionary.ts';
+import Dictionary from './dictionary';
 
 const FOLDER_PATH = path.join(import.meta.dirname, 'dict');
 
@@ -117,6 +117,36 @@ const SpellChecker = {
         }
 
         throw new Error(`The dictionary could not be read, no file with the name "${fileName}" could be found`);
+    },
+
+    /**
+     * Create a dictionary from a zip file at a specific path, extracting it to a given directory.
+     * The dictionary filename is inferred from the zip filename (e.g. `en-US.zip` → `en-US.dic`).
+     *
+     * @param zipPath The full path to the .zip file containing the dictionary.
+     * @param destDir The directory to extract the zip contents into.
+     * @returns A promise that resolves with the Dictionary instance.
+     */
+    async getDictionaryFromZip(zipPath: string, destDir: string): Promise<Dictionary> {
+        const fileName = path.basename(zipPath, '.zip');
+        const dicPath = path.join(destDir, fileName + '.dic');
+
+        // If already extracted, read directly
+        try {
+            await access(dicPath);
+            return await SpellChecker._readFile(dicPath);
+        } catch {
+            // .dic not found, need to extract
+        }
+
+        try {
+            await access(zipPath);
+        } catch {
+            throw new Error(`The zip file could not be found: "${zipPath}"`);
+        }
+
+        SpellChecker._unzipSync(zipPath, destDir);
+        return await SpellChecker._readFile(dicPath);
     },
 
     /**
