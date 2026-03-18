@@ -1,23 +1,54 @@
 name: Publish to npm
 
 on:
-  release:
-    types: [published]
+  push:
+    branches: [master]
+
+permissions:
+  id-token: write
+  contents: write
 
 jobs:
+  check-version:
+    runs-on: ubuntu-latest
+    outputs:
+      version_changed: ${{ steps.check.outputs.changed }}
+      version: ${{ steps.check.outputs.version }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Check if version changed
+        id: check
+        run: |
+          CURRENT_VERSION=$(jq -r '.version' package.json)
+          TAG="v${CURRENT_VERSION}"
+
+          if git tag -l | grep -qx "$TAG"; then
+            echo "Tag $TAG already exists — skipping release"
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "Tag $TAG does not exist — proceeding with release"
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            echo "version=$CURRENT_VERSION" >> "$GITHUB_OUTPUT"
+          fi
+
   publish:
+    needs: check-version
+    if: needs.check-version.outputs.version_changed == 'true'
     runs-on: ubuntu-latest
     permissions:
-      contents: read
       id-token: write
+      contents: read
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: "22"
           registry-url: "https://registry.npmjs.org"
@@ -31,18 +62,18 @@ jobs:
       - name: Run tests
         run: bun test
 
-      - name: Check if version already published
-        id: version-check
-        run: |
-          PKG_VERSION=$(node -p "require('./package.json').version")
-          if npm view "${{ github.event.repository.name }}" versions --json 2>/dev/null | grep -q "\"$PKG_VERSION\""; then
-            echo "Version $PKG_VERSION is already published — skipping."
-            echo "already_published=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "Version $PKG_VERSION has not been published yet."
-            echo "already_published=false" >> "$GITHUB_OUTPUT"
-          fi
-
       - name: Publish with provenance
-        if: steps.version-check.outputs.already_published == 'false'
         run: npm publish --provenance --access public
+
+  release:
+    needs: [check-version, publish]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ needs.check-version.outputs.version }}
+          name: v${{ needs.check-version.outputs.version }}
+          generate_release_notes: true
