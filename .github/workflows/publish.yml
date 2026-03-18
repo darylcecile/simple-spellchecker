@@ -63,7 +63,7 @@ jobs:
         run: bun test
 
       - name: Publish with provenance
-        run: npm publish --provenance --access public
+        run: npm publish --provenance
 
   release:
     needs: [check-version, publish]
