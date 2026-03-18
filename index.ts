@@ -9,9 +9,12 @@ import { readFile, access, writeFile } from 'fs/promises';
 import path from 'path';
 import tmp from 'tmp';
 import Zip from 'adm-zip';
-import Dictionary from './dictionary';
+import Dictionary from './dictionary.js';
 
-const FOLDER_PATH = path.join(import.meta.dirname, 'dict');
+// Resolve dict/ whether running from source (root) or built output (dist/)
+const FOLDER_PATH = fs.existsSync(path.join(import.meta.dirname, 'dict'))
+    ? path.join(import.meta.dirname, 'dict')
+    : path.join(import.meta.dirname, '..', 'dict');
 
 function stripBOM(str: string): string {
     if (str.charCodeAt(0) === 0xFEFF) return str.slice(1);

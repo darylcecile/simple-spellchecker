@@ -12,6 +12,6 @@
     "sourceMap": true,
     "types": ["bun-types"]
   },
-  "include": ["*.ts"],
+  "include": ["index.ts", "dictionary.ts", "declarations.d.ts"],
   "exclude": ["node_modules", "dist"]
 }

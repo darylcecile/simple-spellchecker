@@ -1,20 +1,32 @@
 {
-  "name": "simple-spellchecker",
-  "version": "2.0.0",
+  "name": "@darylcecile/simple-spellchecker",
+  "version": "1.0.0",
   "description": "A simple spellchecker with spelling suggestions (ESM fork)",
   "type": "module",
-  "main": "index.ts",
-  "module": "index.ts",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "exports": {
-    ".": "./index.ts"
+    ".": {
+      "bun": "./index.ts",
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
   },
+  "files": [
+    "dist/",
+    "dict/",
+    "index.ts",
+    "dictionary.ts",
+    "declarations.d.ts",
+    "license.txt"
+  ],
   "scripts": {
-    "build": "bun build index.ts --outdir dist --target node --sourcemap=external --format esm --packages external",
+    "build": "bun build index.ts --outdir dist --target node --sourcemap=external --format esm --packages external && tsc --emitDeclarationOnly",
     "test": "bun test"
   },
   "repository": {
-    "type": "git",
-    "url": "git+https://github.com/darylcecile/simple-spellchecker.git"
+    "url": "https://github.com/darylcecile/simple-spellchecker"
   },
   "keywords": [
     "simple",
@@ -40,6 +52,7 @@
   "devDependencies": {
     "@types/adm-zip": "^0.5.0",
     "@types/bun": "latest",
-    "@types/tmp": "^0.2.0"
+    "@types/tmp": "^0.2.0",
+    "typescript": "^5.0.0"
   }
 }

@@ -5,7 +5,7 @@
  */
 
 import { describe, it, expect, beforeEach, beforeAll } from 'bun:test';
-import SpellChecker from './index.ts';
+import SpellChecker from './index.js';
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
