@@ -1,0 +1,48 @@
+name: Publish to npm
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Build
+        run: bun run build
+
+      - name: Run tests
+        run: bun test
+
+      - name: Check if version already published
+        id: version-check
+        run: |
+          PKG_VERSION=$(node -p "require('./package.json').version")
+          if npm view "${{ github.event.repository.name }}" versions --json 2>/dev/null | grep -q "\"$PKG_VERSION\""; then
+            echo "Version $PKG_VERSION is already published — skipping."
+            echo "already_published=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Version $PKG_VERSION has not been published yet."
+            echo "already_published=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Publish with provenance
+        if: steps.version-check.outputs.already_published == 'false'
+        run: npm publish --provenance --access public

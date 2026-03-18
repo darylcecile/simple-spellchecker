@@ -1,38 +1,58 @@
 {
-  "name": "simple-spellchecker",
-  "version": "1.0.2",
-  "description": "A simple spellchecker compatible with Electron",
-  "main": "index.js",
+  "name": "@darylcecile/simple-spellchecker",
+  "version": "1.0.0",
+  "description": "A simple spellchecker with spelling suggestions (ESM fork)",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "bun": "./index.ts",
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist/",
+    "dict/",
+    "index.ts",
+    "dictionary.ts",
+    "declarations.d.ts",
+    "license.txt"
+  ],
   "scripts": {
-    "test": "mocha test.js"
+    "build": "bun build index.ts --outdir dist --target node --sourcemap=external --format esm --packages external && tsc --emitDeclarationOnly",
+    "test": "bun test"
   },
   "repository": {
-    "type": "git",
-    "url": "git+https://github.com/jfmdev/simple-spellchecker.git"
+    "url": "https://github.com/darylcecile/simple-spellchecker"
   },
   "keywords": [
     "simple",
     "spell",
     "checker",
-    "electron",
     "provider",
-    "spellcheck"
+    "spellcheck",
+    "esm",
+    "typescript"
   ],
   "author": "JFMDev",
   "license": "MPL-2.0",
   "bugs": {
-    "url": "https://github.com/jfmdev/simple-spellchecker/issues"
+    "url": "https://github.com/darylcecile/simple-spellchecker/issues"
   },
-  "homepage": "https://github.com/jfmdev/simple-spellchecker#readme",
+  "homepage": "https://github.com/darylcecile/simple-spellchecker#readme",
   "dependencies": {
     "adm-zip": "^0.5.4",
     "binarysearch": "^0.2.4",
     "damerau-levenshtein": "^1.0.5",
-    "strip-bom": "^2.0.0",
     "tmp": "^0.1.0"
   },
   "devDependencies": {
-    "chai": "^3.5.0",
-    "mocha": "^10.2.0"
+    "@types/adm-zip": "^0.5.0",
+    "@types/bun": "latest",
+    "@types/tmp": "^0.2.0",
+    "typescript": "^5.0.0"
   }
 }
